@@ -19,61 +19,44 @@ app.use('/api', apiRouter);
 
 function templateCarousel(data){
 
-  const score_obj = data["score"]["full_time"];
-  const score_arr = Object.values(score_obj);
+  let score_obj = data["score"]["full_time"];
+  let score_arr = Object.values(score_obj);
+  let roundNum = data["round"];
 
-  const template = {
-    "version": "2.0",
-    "template": {
-      "outputs": [
-        {
-            "simpleText" : {
-              "text" : ""
+  let carousel = {
+
+          "imageTitle": {
+            "title": data["team_1"].name + " vs " + data["team_2"].name,
+          },
+          "itemList": [
+            {
+              "title": "경기 라운드",
+              "description": data["round_info"],
+            },
+            {
+              "title": "경기 스코어",
+              "description": score_arr[0] + ":" + score_arr[1],
+            },
+            {
+              "title": "경기 일시", // api에서 찾아봐야 됨
+              "description": ''
+            },
+            {
+              "title" : "경기 장소", // api에서 찾아봐야 됨
+              "description" : ''
+            },
+          ],
+          "itemListAlignment": "left",
+          "buttons": [
+            {
+              "label": "자세히",
+              "action": "message",
+              "messageText" : "경기 세부사항"
             }
-        },
-        {
-          "carousel": {
-            "type" : "itemCard",
-            "items" : [
-              {
-                "imageTitle": {
-                  "title": data["team_1"].name + "vs" + data["team_2"].name,
-                },
-                "itemList": [
-                  {
-                    "title": "경기 라운드",
-                    "description": data["round_info"],
-                  },
-                  {
-                    "title": "경기 스코어",
-                    "description": score_arr[0] + ":" + score_arr[1],
-                  },
-                  {
-                    "title": "경기 일시", // api에서 찾아봐야 됨
-                    "description": ''
-                  },
-                  {
-                    "title" : "경기 장소", // api에서 찾아봐야 됨
-                    "description" : ''
-                  },
-                ],
-                "itemListAlignment": "left",
-                "buttons": [
-                  {
-                    "label": "자세히",
-                    "action": "message",
-                    "messageText" : "경기 세부사항"
-                  }
-                ]
-              }
-            ]
-          }
-        }
-      ]
-    }
-  }
+          ]
+        } 
 
-  return template;
+  return carousel;
 }
 
 apiRouter.post('/sayHello', function(req, res) {
@@ -82,51 +65,15 @@ apiRouter.post('/sayHello', function(req, res) {
   const request = JSON.parse(req.body.action.params.round_num) // req.action ~ body를 빼먹어서 오류가 생겼음
   // 만약 params를 제외한 나머지는 일반 객체이다.
 
-  // const responseBody = {
-  //   version: "2.0",
-  //   template: {
-  //     outputs: [
-  //       {
-  //         simpleText: {
-  //           text: "hello I'm Ryan"
-  //         }
-  //       }
-  //     ]
-  //   }
-  // };
-  // res.status(200).send(responseBody);
-
   // console.log(req.body.userRequest);
   console.log(request.amount);
   // console.log(req.body)
 });
 
-apiRouter.post('/sayTest', function(req,res) {
-  const question = req.body.userRequest.utterance;
-
-  const responseBody = {
-  version: "2.0",
-  template: {
-    outputs: [
-      {
-        simpleText: {
-          text: "맨체스터 시티"
-          }
-        }
-      ]
-    }
-  };
-
-  console.log(question);
-  
-  res.status(200).send(responseBody);
-}
-);
-
 apiRouter.post('/result', (req,res)=>{
 
-  const request = JSON.parse(req);
-  const round_num = req["action"]["params"];
+  const result = JSON.parse(req.body.action.params.round_num); // 라운드 입력 값
+  const round_num = result.amount;
 
   const options = {
     method: 'GET',
@@ -135,7 +82,7 @@ apiRouter.post('/result', (req,res)=>{
       country_code: 'england',
       league_code: 'premier-league',
       timezone_utc: '0',
-      round: '8'
+      round: round_num,
     },
     headers: {
       'X-RapidAPI-Key': process.env.API_KEY,
@@ -147,11 +94,35 @@ apiRouter.post('/result', (req,res)=>{
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
 
+    const dataTemplate = {
+      "version": "2.0",
+      "template": {
+        "outputs": [
+          {
+              "simpleText" : {
+                "text" : `22-23 EPL ${this.roundNum} 라운드 결과입니다.`
+              }
+          },
+          {
+            "carousel": {
+              "type" : "itemCard",
+              "items" : []
+            }
+          }
+        ]
+      }
+    }
+    const itemArr = dataTemplate.template.outputs[1].carousel.items;
+
     const result = JSON.parse(body);
-    // result.data.forEach( a => {
-    //   console.log(a)
-    // });
-    console.log(result.data[1]);
+    result.data.forEach( a => {
+      itemArr.push(templateCarousel(a));
+      // console.log(a)
+    });
+    // console.log(result.data[1]);
+    
+    // console.log(dataTemplate);
+    res.json(dataTemplate);
 
     // 템플릿 반환하는 함수를 responseBody에 담고, 이를 res.send로 전달 / body 값을 파싱한 result (배열) -> 특정 라운드만 추출 -> 
   });
