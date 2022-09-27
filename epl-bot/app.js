@@ -19,11 +19,11 @@ app.use('/api', apiRouter);
 
 function templateCarousel(data){
 
-  let score_obj = data["score"]["full_time"];
-  let score_arr = Object.values(score_obj);
-  let roundNum = data["round"];
+  const score_obj = data["score"]["full_time"];
+  const score_arr = Object.values(score_obj);
+  const roundNum = data["round"];
 
-  let carousel = {
+  const carousel = {
 
           "imageTitle": {
             "title": data["team_1"].name + " vs " + data["team_2"].name,
