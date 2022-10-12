@@ -25,8 +25,9 @@ function templateCarousel(data){
 
   const carousel = {
 
+          // team1 : HOME, team2 : AWAY
           "imageTitle": {
-            "title": data["team_1"].name + " vs " + data["team_2"].name,
+            "title": data["team_1"].name + "(홈) vs " + data["team_2"].name + "(어웨이)",
           },
           "itemList": [
             {
@@ -38,13 +39,10 @@ function templateCarousel(data){
               "description": score_arr[0] + ":" + score_arr[1],
             },
             {
-              "title": "경기 일시", // api에서 찾아봐야 됨
+              "title": "경기 일시", // data["time"].scheduled -> timezone 설정 
               "description": ''
             },
-            {
-              "title" : "경기 장소", // api에서 찾아봐야 됨
-              "description" : ''
-            },
+            // 썸네일 로고 추가, data["team_1"].logo
           ],
           "itemListAlignment": "left",
           "buttons": [
@@ -89,6 +87,7 @@ apiRouter.post('/result', (req,res)=>{
     }
   }; // 라운드 입력 값을 전달받아 simpleText(응답 시 첫 메세지)에 저장
 
+  // API 요청 헤더, API 키 환경변수 관리하기
   const options = {
     method: 'GET',
     url: 'https://livescore-football.p.rapidapi.com/soccer/matches-by-league',
@@ -105,6 +104,7 @@ apiRouter.post('/result', (req,res)=>{
     }
   };
 
+  // Request API 요청 코드
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
 
@@ -134,6 +134,7 @@ apiRouter.post('/result', (req,res)=>{
 
 apiRouter.post('/team-table', (req, res)=>{
 
+  // API 요청 헤더, API 키 환경변수 관리하기
   const options = {
     method: 'GET',
     url: 'https://livescore-football.p.rapidapi.com/soccer/league-table',
@@ -145,6 +146,7 @@ apiRouter.post('/team-table', (req, res)=>{
     }
   };
   
+  // Request API 요청 코드
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
 
