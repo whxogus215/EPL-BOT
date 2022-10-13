@@ -26,9 +26,8 @@ function templateCarousel(data){
   const str_date = String(data["time"].scheduled).replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/, '$1/$2/$3/$4:$5:$6');
 
   const mil_date = Date.parse(str_date); // UTC 기준 밀리초 반환
-  const KR_TIME_DIFF = 9 * 60 * 60 * 1000; // 한국 타임존 시차 밀리초로 변경
 
-  const kor_date = new Date(mil_date + KR_TIME_DIFF); // UTC 기준 밀리초에 한국 시차 적용
+  const kor_date = new Date(mil_date); // UTC 기준 밀리초 Date 객체 반환
   const date = kor_date.toGMTString(); // 날짜 문자열 포맷 출력
 
   const carousel = {
@@ -91,7 +90,7 @@ apiRouter.post('/result', (req,res)=>{
   const round_num = result.amount;
   const simpleText = {
     "simpleText" : {
-      "text" : `22-23 EPL ${round_num} 라운드 결과입니다.`
+      "text" : `22-23 EPL ${round_num} 라운드`
     }
   }; // 라운드 입력 값을 전달받아 simpleText(응답 시 첫 메세지)에 저장
 
@@ -102,7 +101,7 @@ apiRouter.post('/result', (req,res)=>{
     qs: {
       country_code: 'england',
       league_code: 'premier-league',
-      timezone_utc: '0',
+      timezone_utc: '9:00',
       round: round_num,
     },
     headers: {
