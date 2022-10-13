@@ -21,13 +21,22 @@ function templateCarousel(data){
 
   const score_obj = data["score"]["full_time"]; // data의 score에 해당하는 오브젝트를 담은 뒤
   const score_arr = Object.values(score_obj); // 담은 오브젝트의 value를 배열로 담는다.
-  const roundNum = data["round"];
+
+  // 날짜 문자열 정규식 변환
+  const str_date = String(data["time"].scheduled).replace(/^(\d{4})(\d\d)(\d\d)(\d\d)(\d\d)(\d\d)$/, '$1/$2/$3/$4:$5:$6');
+
+  const mil_date = Date.parse(str_date); // UTC 기준 밀리초 반환
+  const KR_TIME_DIFF = 9 * 60 * 60 * 1000; // 한국 타임존 시차 밀리초로 변경
+
+  const kor_date = new Date(mil_date + KR_TIME_DIFF); // UTC 기준 밀리초에 한국 시차 적용
+  const date = kor_date.toGMTString(); // 날짜 문자열 포맷 출력
 
   const carousel = {
 
           // team1 : HOME, team2 : AWAY
           "imageTitle": {
             "title": data["team_1"].name + "(홈) vs " + data["team_2"].name + "(어웨이)",
+            "imageUrl": data["team_1"].logo, // 홈 팀 로고
           },
           "itemList": [
             {
@@ -39,10 +48,9 @@ function templateCarousel(data){
               "description": score_arr[0] + ":" + score_arr[1],
             },
             {
-              "title": "경기 일시", // data["time"].scheduled -> timezone 설정 
-              "description": ''
+              "title": "경기 일시",
+              "description": date,
             },
-            // 썸네일 로고 추가, data["team_1"].logo
           ],
           "itemListAlignment": "left",
           "buttons": [
