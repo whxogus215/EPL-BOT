@@ -17,6 +17,8 @@ app.use(bodyParser.urlencoded({
 
 app.use('/api', apiRouter);
 
+// 함수만 따로 파일 만들어서 관리하기! (나중에)
+
 function templateCarousel(data){
 
   const score_obj = data["score"]["full_time"]; // data의 score에 해당하는 오브젝트를 담은 뒤
@@ -68,6 +70,24 @@ function tableCarousel(data){
   const carousel = {
     "title": `${data["rank"]}위 ${data["team_name"]}`,
     "description": `${data["games_played"]}경기 ${data["points"]}승점 ${data["won"]}승 ${data["draw"]}무 ${data["lost"]}패 ${data["goals_for"]}득점 ${data["goals_against"]}실점 ${data["goals_diff"]}득실차`,
+  }
+
+  return carousel;
+}
+
+function newsCarousel(data){
+  const carousel = {
+    "title": data["title"],
+    "thumbnail": {
+      "imageUrl": data["thumbnail_1"]
+    },
+    "buttons": [
+      {
+        "action":  "webLink",
+        "label": "자세히",
+        "webLinkUrl": data["url"],
+      }
+    ]
   }
 
   return carousel;
@@ -194,6 +214,53 @@ apiRouter.post('/team-table', (req, res)=>{
     // console.log(itemArr);
     // JSON.stringify(tableTemplate.template.outputs[0].carousel.items[0]);
     res.json(tableTemplate);
+  });
+
+})
+
+
+apiRouter.post('/club-news', (req, res)=>{
+
+  // API 요청 헤더, API 키 환경변수 관리하기
+  const options = {
+    method: 'GET',
+    url: 'https://livescore-football.p.rapidapi.com/soccer/news-list',
+    qs: {page: '1'},
+    headers: {
+      'X-RapidAPI-Key': process.env.API_KEY,
+      'X-RapidAPI-Host': 'livescore-football.p.rapidapi.com',
+      useQueryString: true
+    }
+  };
+  
+  // Request API 요청 코드
+  request(options, function (error, response, body) {
+    if (error) throw new Error(error);
+
+    const newsTemplate = {
+      "version": "2.0",
+      "template": {
+        "outputs": [
+          {
+            "carousel": {
+              "type" : "basicCard",
+              "items" : []
+            }
+          }
+        ]
+      }
+    }
+    const itemArr = newsTemplate.template.outputs[0].carousel.items;
+    // // items에 각각의 팀 결과를 오브젝트로 담아서 추가해야 함!
+
+    const result = JSON.parse(body);
+    const news_data = result.data;
+
+    for (i = 0; i< 10; i++){
+      itemArr.push(newsCarousel(news_data[i]));
+    }
+
+    res.json(newsTemplate);
   });
 
 })
