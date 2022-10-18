@@ -66,13 +66,11 @@ function templateCarousel(data){
   return carousel;
 }
 
-function tableCarousel(data){
-  const carousel = {
-    "title": `${data["rank"]}위 ${data["team_name"]}`,
-    "description": `${data["games_played"]}경기 ${data["points"]}승점 ${data["won"]}승 ${data["draw"]}무 ${data["lost"]}패 ${data["goals_for"]}득점 ${data["goals_against"]}실점 ${data["goals_diff"]}득실차`,
-  }
+function tableClub(data){
+  const rankNum = String(data["rank"]).padStart(2,'0');
+  let result = `${rankNum} | "${data["team_name"]}" ${data["games_played"]}경기 ${data["won"]}승 ${data["draw"]}무 ${data["lost"]}패 -- ${data["points"]}P`+'\n';
 
-  return carousel;
+  return result;
 }
 
 function newsCarousel(data){
@@ -177,45 +175,35 @@ apiRouter.post('/team-table', (req, res)=>{
   request(options, function (error, response, body) {
     if (error) throw new Error(error);
 
+    let teamStr = "";
+
+    const result = JSON.parse(body);
+    const table_data = result.data.total;
+      
+    for(i = 0; i< 20; i++){
+      teamStr = teamStr + tableClub(table_data[i]);
+    }
+    
     const tableTemplate = {
       "version": "2.0",
       "template": {
         "outputs": [
           {
-            "carousel": {
-              "type" : "listCard",
-              "items" : [
-                {
-                  "header": {
-                    "title" : "EPL 22-23 팀 순위"
-                  },
-                  "items": []
-                }
-              ]
+            "simpleText":{
+              "text" : `실시간 22-23 EPL 순위입니다.`,
+            }
+          },
+          {
+            "simpleText":{
+              "text" : teamStr,
             }
           }
         ]
       }
     }
-    const itemArr = tableTemplate.template.outputs[0].carousel.items[0].items;
-    // // items에 각각의 팀 결과를 오브젝트로 담아서 추가해야 함!
 
-    const result = JSON.parse(body);
-    const table_data = result.data.total;
-
-    for (i = 0; i< 5; i++){
-      itemArr.push(tableCarousel(table_data[i]));
-    }
-
-    // table_data.forEach(a => {
-    //   itemArr.push(tableCarousel(a));
-    //     // 배열의 오브젝트 값을 함수로 넘김
-    // })
-    // console.log(itemArr);
-    // JSON.stringify(tableTemplate.template.outputs[0].carousel.items[0]);
     res.json(tableTemplate);
   });
-
 })
 
 
@@ -251,7 +239,6 @@ apiRouter.post('/club-news', (req, res)=>{
       }
     }
     const itemArr = newsTemplate.template.outputs[0].carousel.items;
-    // // items에 각각의 팀 결과를 오브젝트로 담아서 추가해야 함!
 
     const result = JSON.parse(body);
     const news_data = result.data;
@@ -262,10 +249,7 @@ apiRouter.post('/club-news', (req, res)=>{
 
     res.json(newsTemplate);
   });
-
 })
-
-
 
 app.listen(PORT, function(){
 	console.log('node on 3000');
