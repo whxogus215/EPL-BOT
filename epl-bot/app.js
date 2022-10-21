@@ -6,6 +6,9 @@ const request = require('request');
 const PORT = 3000;
 const apiRouter = express.Router();
 
+let arrQuickReplies = []; // 바로연결 버튼에 들어갈 라운드 입력 값(최대 3개)
+
+
 require('dotenv').config();
 
 
@@ -75,7 +78,7 @@ function tableClub(data){
 
 function newsCarousel(data){
   const carousel = {
-    "title": data["title"],
+    "title": data["caption"],
     "thumbnail": {
       "imageUrl": data["thumbnail_1"]
     },
@@ -91,6 +94,44 @@ function newsCarousel(data){
   return carousel;
 }
 
+function addQuickReplies(roundNum){
+  if (arrQuickReplies.length == 3){
+    arrQuickReplies.pop();
+    arrQuickReplies.unshift(roundNum);
+  } else {
+    arrQuickReplies.unshift(roundNum);
+  }
+}
+
+function getRoundTemplate(){
+
+  const quickReplies = [];
+
+  arrQuickReplies.forEach(value => {
+    quickReplies.push({
+      'label': value,
+      'action': 'message',
+      'messageText' : value
+    })
+  })
+
+  const data = {
+    "version": "2.0",
+    "template": {
+        "outputs": [
+            {
+                "simpleText": {
+                    "text": "EPL 라운드를 입력해 주세요!"
+                }
+            }
+        ],
+        "quickReplies": quickReplies
+    }
+  }
+
+  return data;
+}
+
 apiRouter.post('/sayHello', function(req, res) {
   
   // params에 해당하는 부분만 JSON 형태이므로 일반 객체로 변환
@@ -102,10 +143,20 @@ apiRouter.post('/sayHello', function(req, res) {
   // console.log(req.body)
 });
 
+apiRouter.post('/result-question', (req,res)=>{
+
+  const data = getRoundTemplate();
+
+  res.json(data);
+
+})
+
 apiRouter.post('/result', (req,res)=>{
 
   const result = JSON.parse(req.body.action.params.round_num); // 라운드 입력 값
   const round_num = result.amount;
+  addQuickReplies(round_num); // 배열에 라운드 입력 값 추가
+
   const simpleText = {
     "simpleText" : {
       "text" : `22-23 EPL ${round_num} 라운드`
